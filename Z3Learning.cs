@@ -23,7 +23,7 @@ public static class Z3Learning
         Console.WriteLine($"=== Lesson 1: sat vs unsat ===\n");
 
         using var ctx = new Context();
-        var x = ctx.MkIntConst("x"); // a symbolic integer: "some unknown int called x"
+        var x = ctx.MkIntConst("x"); // a symbolic integer some unknown int called x
         var y = ctx.MkIntConst("y");
 
         var s = ctx.MkSolver();
@@ -46,14 +46,14 @@ public static class Z3Learning
     public static void Lesson2_ProveByRefutation()
     {
         Console.WriteLine($"=== Lesson 2: prove-by-refutation ===\n");
-        Console.WriteLine("To prove 'A always equals B', assert NOT(A == B) and check.");
-        Console.WriteLine("  unsat -> no counterexample exists -> A and B are ALWAYS equal");
-        Console.WriteLine("  sat   -> Z3 just handed you a counterexample -> NOT equivalent\n");
+        Console.WriteLine("To prove A always equals B, assert NOT(A == B) and check.");
+        Console.WriteLine("  unsat -> no counterexample exists -> A and B are always equal");
+        Console.WriteLine("  sat   -> Z3 just handed you a counterexample -> Not equivalent\n");
 
         using var ctx = new Context();
         var r = ctx.MkRealConst("r"); // a real number symbolic input
 
-        // Two "programs" computing circle area two different (but equal) ways:
+        // Two programs computing circle area two different but equal ways:
         var pi = ctx.MkReal(31415926, 10000000);   // rational approximation of pi
         var original  = ctx.MkMul(pi, r, r);      
         var generated = ctx.MkMul(r, r, pi);      
@@ -112,12 +112,11 @@ public static class Z3Learning
         var elseState = new Dictionary<string, ArithExpr>(state) { ["result"] = speed };
         state["result"] = (ArithExpr)ctx.MkITE(cond, thenState["result"], elseState["result"]);
 
-        // result = result * scale;  (a plain assignment just replaces the map entry)
         state["result"] = ctx.MkMul(state["result"], scale);
 
         Console.WriteLine("  Z3 says:  " + state["result"].Simplify());
         Console.WriteLine("  In C#:    scale * (speed <= limit ? speed : limit)");
-        Console.WriteLine("  (Simplify() just rewrote our 'speed > limit' condition into an equivalent 'speed <= limit' with the branches swapped.)");
+        Console.WriteLine("  Simplify() just rewrote our speed > limit condition into an equivalent speed <= limit with the branches swapped.");
 
         // Prove a property: result never exceeds limit*scale (assuming scale >= 0).
         var solver = ctx.MkSolver();
@@ -127,29 +126,29 @@ public static class Z3Learning
         Console.WriteLine($"\ncan result exceed limit*scale (scale>=0)?  ->  {solver.Check()} ");
     }
 
-    // Lesson 5: The Min/Max 
+    // Lesson 5: The Min Max 
     public static void Lesson5_MinMax()
     {
-        Console.WriteLine($"=== Lesson 5: why Min/Max get a REAL definition, not an opaque function ===\n");
-        Console.WriteLine("ExpressionLowerer gives Min/Max an actual ITE definition (not an uninterpreted");
-        Console.WriteLine("function like Sin) specifically so a real ordering bug can be CAUGHT.\n");
+        Console.WriteLine($"=== Lesson 5: The Min Max ===\n");
+        Console.WriteLine("ExpressionLowerer gives Min/Max an actual ITE definition");
 
         using var ctx = new Context();
         var a = ctx.MkRealConst("a");
         var b = ctx.MkRealConst("b");
 
+        // sorting is encoded in the two local functions
         ArithExpr Min(ArithExpr x, ArithExpr y) => (ArithExpr)ctx.MkITE(ctx.MkLe(x, y), x, y);
         ArithExpr Max(ArithExpr x, ArithExpr y) => (ArithExpr)ctx.MkITE(ctx.MkGe(x, y), x, y);
 
-        // original CPU code: emit pair as (Min(a,b), Max(a,b))
+        // original code: emit pair as (Min(a,b), Max(a,b))
         var originalLow  = Min(a, b);
         var originalHigh = Max(a, b);
 
-        // buggy generated shader: hardcoded (a, b) with NO sorting
+        // buggy generated code: hardcoded (a, b) with no sorting
         var generatedLow  = a;
         var generatedHigh = b;
 
-        // Two outputs to compare -> "some output differs" = OR of the two inequalities.
+        // Two outputs to compare -> some output differs = OR of the two inequalities.
         var solver = ctx.MkSolver();
         solver.Assert(ctx.MkOr(
             ctx.MkNot(ctx.MkEq(originalLow, generatedLow)),
@@ -162,7 +161,7 @@ public static class Z3Learning
     }
 
     /// <summary>
-    /// Method to check if a and b areequal for ALL inputs
+    /// Method to check if a and b are equal for all inputs
     /// Asserts NOT(a == b): unsat means proved equal, sat means Z3 found a counterexample.
     /// </summary>
     private static Status Prove(Context ctx, string label, Expr a, Expr b)
